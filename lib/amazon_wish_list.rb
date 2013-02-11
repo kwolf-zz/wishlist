@@ -20,7 +20,33 @@ class AmazonWishList
     find_wish_lists field
   end
 
-  #private
+  def items(url)
+    get_items url
+  end
+
+  private
+
+  def get_items(url)
+    @agent.get url
+    items = @agent.page.search('tbody[class="itemWrapper"]')
+    parse_items items if items
+  end
+
+  def parse_items(items)
+    @items = Array.new()
+
+    items.each do |item|
+      i = Hash.new()
+      i[:title] = item.search('span[class="small productTitle"] a').text
+      i[:url] = item.search('span[class="small productTitle"] a')[0][:href]
+      i[:price] = item.search('.wlPriceBold strong').text
+      i[:added] = item.search('.commentBlock .commentBlock nobr').text
+      i[:priority] = item.search('.priorityValueText').text.strip
+      i[:quantity] = item.search('.quantityValueText').text.strip
+      i[:img_url] = item.search('.productImage img')[0]['src']
+      @items << i
+    end
+  end
 
   def find_wish_lists(field)
     @agent.get($search_url)
